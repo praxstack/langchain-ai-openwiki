@@ -92,6 +92,18 @@ type AppProps = {
   command: CliCommand;
 };
 
+const OPENWIKI_LOGO_LINES = [
+  "  ___                  __        ___ _    _ ",
+  " / _ \\ _ __   ___ _ __ \\ \\      / (_) | _(_)",
+  "| | | | '_ \\ / _ \\ '_ \\ \\ \\ /\\ / /| | |/ / |",
+  "| |_| | |_) |  __/ | | | \\ V  V / | |   <| |",
+  " \\___/| .__/ \\___|_| |_|  \\_/\\_/  |_|_|\\_\\_|",
+  "      |_|",
+];
+const OPENWIKI_LOGO_WIDTH = Math.max(
+  ...OPENWIKI_LOGO_LINES.map((line) => line.length),
+);
+
 function App({ command }: AppProps) {
   const app = useApp();
   const startupModelId = command.kind === "run" ? command.modelId : null;
@@ -647,31 +659,31 @@ function Header({
   modelId?: string | null;
   subtitle: string;
 }) {
+  const terminalColumns = process.stdout.columns ?? 80;
   const displayModelId = sanitizeHeaderValue(
     modelId ?? process.env[OPENWIKI_MODEL_ID_ENV_KEY] ?? DEFAULT_MODEL_ID,
+    Math.max(8, terminalColumns - 12),
   );
-  const displayDirectory = sanitizeHeaderValue(formatCwd(process.cwd()), 120);
+  const displayDirectory = sanitizeHeaderValue(
+    formatCwd(process.cwd()),
+    Math.max(8, terminalColumns - 17),
+  );
+  const showLogo = terminalColumns > OPENWIKI_LOGO_WIDTH;
   const tracingEnabled =
     process.env.LANGCHAIN_TRACING_V2 === "true" &&
     Boolean(process.env.LANGSMITH_API_KEY);
 
   return (
     <Box flexDirection="column" marginBottom={1}>
-      <Box marginBottom={1}>
-        <Text color="cyan" bold>
-          {"  ___                  __        ___ _    _ "}
-          {"\n"}
-          {" / _ \\ _ __   ___ _ __ \\ \\      / (_) | _(_)"}
-          {"\n"}
-          {"| | | | '_ \\ / _ \\ '_ \\ \\ \\ /\\ / /| | |/ / |"}
-          {"\n"}
-          {"| |_| | |_) |  __/ | | | \\ V  V / | |   <| |"}
-          {"\n"}
-          {" \\___/| .__/ \\___|_| |_|  \\_/\\_/  |_|_|\\_\\_|"}
-          {"\n"}
-          {"      |_|"}
-        </Text>
-      </Box>
+      {showLogo ? (
+        <Box flexDirection="column" marginBottom={1}>
+          {OPENWIKI_LOGO_LINES.map((line) => (
+            <Text bold color="cyan" key={line} wrap="truncate">
+              {line}
+            </Text>
+          ))}
+        </Box>
+      ) : null}
       <Box
         borderColor="cyan"
         borderStyle="round"
